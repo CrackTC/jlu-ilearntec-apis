@@ -1,0 +1,23 @@
+{
+  "version": "3",
+  "packages": {
+    "specifiers": {
+      "jsr:@b-fuze/deno-dom": "jsr:@b-fuze/deno-dom@0.1.48",
+      "jsr:@std/encoding": "jsr:@std/encoding@1.0.3"
+    },
+    "jsr": {
+      "@b-fuze/deno-dom@0.1.48": {
+        "integrity": "bf5b591aef2e9e9c59adfcbb93a9ecd45bab5b7c8263625beafa5c8f1662e7da"
+      },
+      "@std/encoding@1.0.3": {
+        "integrity": "5dbc2d7f5aa6062de7e19862ea856ac7a0dcce0b6fb46bb7b332d3bdcd4408b7"
+      }
+    }
+  },
+  "remote": {},
+  "workspace": {
+    "dependencies": [
+      "jsr:@std/assert@1"
+    ]
+  }
+}
