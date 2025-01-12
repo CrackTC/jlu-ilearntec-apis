@@ -1,51 +1,65 @@
 import { get, getCookie, getJsonp, getRedirect } from "../utils.ts";
+import { Jwc } from "../auth/jwc.ts";
 
 const getIlearnCasUrl = (params: Record<string, string> = {}) =>
-    "https://ilearn.jlu.edu.cn/cas-server/login?" + new URLSearchParams(params);
+  "https://ilearn.jlu.edu.cn/cas-server/login?" + new URLSearchParams(params);
+
+type iLearnCasParams = {
+  username: string;
+  password: string;
+};
 
 export class ILearnCas {
-    private _casTgc: Promise<string>;
+  static async fromJwc(jwc: Jwc) {
+    return new ILearnCas(await jwc.getCredentials());
+  }
 
-    constructor(private username: string, private password: string) {
-        this._casTgc = this.getCasTgc();
-    }
+  private _casTgc: Promise<string>;
+  private _username: string;
+  private _password: string;
 
-    private async getCasTgc() {
-        const JSESSIONID = await getCookie(
-            get(getIlearnCasUrl()),
-            "JSESSIONID",
-        );
+  private constructor({ username, password }: iLearnCasParams) {
+    this._casTgc = this.getCasTgc();
+    this._username = username;
+    this._password = password;
+  }
 
-        const { lt, execution } = await getJsonp(
-            get(
-                getIlearnCasUrl({
-                    service: "https://ilearntec.jlu.edu.cn/",
-                    "get-lt": "true",
-                }),
-                { JSESSIONID },
-            ),
-        );
+  private async getCasTgc() {
+    const JSESSIONID = await getCookie(
+      get(getIlearnCasUrl()),
+      "JSESSIONID",
+    );
 
-        return await getCookie(
-            get(
-                getIlearnCasUrl({
-                    service: "https://ilearntec.jlu.edu.cn/",
-                    username: this.username,
-                    password: btoa(this.password),
-                    isajax: "true",
-                    _eventId: "submit",
-                    lt,
-                    execution,
-                }),
-                { JSESSIONID },
-            ),
-            "CASTGC",
-        );
-    }
+    const { lt, execution } = await getJsonp(
+      get(
+        getIlearnCasUrl({
+          service: "https://ilearntec.jlu.edu.cn/",
+          "get-lt": "true",
+        }),
+        { JSESSIONID },
+      ),
+    );
 
-    public async authenticate(service: string) {
-        return await getRedirect(
-            get(getIlearnCasUrl({ service }), { CASTGC: await this._casTgc }),
-        );
-    }
+    return await getCookie(
+      get(
+        getIlearnCasUrl({
+          service: "https://ilearntec.jlu.edu.cn/",
+          username: this._username,
+          password: btoa(this._password),
+          isajax: "true",
+          _eventId: "submit",
+          lt,
+          execution,
+        }),
+        { JSESSIONID },
+      ),
+      "CASTGC",
+    );
+  }
+
+  public async authenticate(service: string) {
+    return await getRedirect(
+      get(getIlearnCasUrl({ service }), { CASTGC: await this._casTgc }),
+    );
+  }
 }

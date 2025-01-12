@@ -1,22 +1,24 @@
 import { get, getCookie, getElemValue } from "../utils.ts";
+import { JluCas } from "./jlu-cas/index.ts";
 
 const jwcUrl =
-    "https://jwcidentity.jlu.edu.cn/iplat-pass-jlu/thirdLogin/jlu/login";
+  "https://jwcidentity.jlu.edu.cn/iplat-pass-jlu/thirdLogin/jlu/login";
 
 export class Jwc {
-    constructor(private jwcTicketUrl: string) {}
+  static async fromJluCas(cas: JluCas) {
+    return new Jwc(await cas.authenticate(jwcUrl));
+  }
 
-    async getCredentials() {
-        const JSESSIONID = await getCookie(
-            get(this.jwcTicketUrl),
-            "JSESSIONID",
-        );
+  private constructor(private jwcTicketUrl: string) {}
 
-        const jwcHtml = get(jwcUrl, { JSESSIONID });
+  async getCredentials() {
+    const JSESSIONID = await getCookie(get(this.jwcTicketUrl), "JSESSIONID");
 
-        return {
-            username: await getElemValue(jwcHtml, "#username"),
-            password: await getElemValue(jwcHtml, "#password"),
-        };
-    }
+    const jwcHtml = get(jwcUrl, { JSESSIONID });
+
+    return {
+      username: await getElemValue(jwcHtml, "#username"),
+      password: await getElemValue(jwcHtml, "#password"),
+    };
+  }
 }
